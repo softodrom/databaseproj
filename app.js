@@ -9,6 +9,24 @@ var path = require('path');
 var mysql = require('mysql');
 var session = require('express-session');
 
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+const myPlaintextPassword = 's0/\/\P4$$w0rD';
+const someOtherPlaintextPassword = 'not_baco';
+
+
+bcrypt.hash(myPlaintextPassword, saltRounds, function(err, hash) {
+    console.log(myPlaintextPassword)
+
+    console.log(hash)
+
+    bcrypt.compare("zcbre345", "$2a$10$fOigPbT1tEzy1D0jYr838.GMAqDlvySciK7QfQ/o00jtlNbC1GXg6", function(err, result) {
+        console.log(result)
+    });
+
+});
+
+
 
 var con = mysql.createConnection({
     host: "n2o93bb1bwmn0zle.chr7pe7iynqr.eu-west-1.rds.amazonaws.com",
@@ -70,10 +88,14 @@ passport.use(new LocalStrategy(
             if (!results[0]) {
                 return done(null, false, { message: 'Incorrect username.' });
             }
-            if (results[0].password != password)  {
-                return done(null, false, { message: 'Incorrect password.' });
-            }
-            return  done(null, results[0])
+
+            bcrypt.compare(password, results[0].password, function(err, result) {
+                if (result == false)  {
+                    return done(null, false, { message: 'Incorrect password.' });
+                } else {
+                    return done(null, results[0])
+                }
+            });
 
         })
     }
@@ -81,10 +103,13 @@ passport.use(new LocalStrategy(
 
 function adminLoggedIn(req, res, next) {
     if (req.user){
-    if (req.user.role == "admin") {
+        if (req.user.role == "admin") {
         next();
+        } else {
+            res.send('you have to be an admin to access this page !');
+        }
     }
-    } else {
+    else {
         res.send('you have to be logged in as admin to access this page !');
     }
 }
@@ -106,7 +131,7 @@ app.get('/', adminLoggedIn, function (req, res) {
     res.send("you are logged in");
  
 });
-app.get('/users', async (req, res )=>{ 
+app.get('/users', adminLoggedIn, async (req, res )=>{
     let sql = "select * from users_v_account_cards;";
       
 con.query(sql, true, (error, results, fields) => {
@@ -119,7 +144,7 @@ con.query(sql, true, (error, results, fields) => {
 });
 
 })
-app.post('/createuser', async (req, res )=>{
+app.post('/createuser', adminLoggedIn, async (req, res )=>{
     const parameters =  req.body;
   
     // let sql = 'CALL CreatetUserAndAccount("Aaron", "ALAYO", "aaro0186@stud.edu.dk", "male", "65325675", "Odense", "usd", 1000, 1234, 2021-11-08)';
@@ -147,7 +172,7 @@ app.post('/createuser', async (req, res )=>{
     
 })
 
-app.put('/updateuser', (req, res)=> {
+app.put('/updateuser', adminLoggedIn, (req, res)=> {
     const parameters =  req.body;
 
     let sql = `CALL UpdateUser(
@@ -169,7 +194,7 @@ con.query(sql, true, (error, results, fields) => {
 });
 })
 
-app.delete('/deleteuser', async (req, res )=>{
+app.delete('/deleteuser', adminLoggedIn, async (req, res )=>{
     const userId =  req.body.userId;
   
         let sql = `CALL DeleteUserAndAccount(
@@ -188,7 +213,7 @@ app.delete('/deleteuser', async (req, res )=>{
 })
 
 
-app.get('/bankemployees', async (req, res )=>{ 
+app.get('/bankemployees', adminLoggedIn, async (req, res )=>{
     let sql = "select * from bank_v_employee;";
       
 con.query(sql, true, (error, results, fields) => {
