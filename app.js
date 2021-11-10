@@ -85,7 +85,7 @@ function adminLoggedIn(req, res, next) {
         next();
     }
     } else {
-        res.send('you have to be logged in as admin to access this page');
+        res.send('you have to be logged in as admin to access this page ');
     }
 }
 
