@@ -146,9 +146,7 @@ con.query(sql, true, (error, results, fields) => {
 })
 app.post('/createuser', adminLoggedIn, async (req, res )=>{
     const parameters =  req.body;
-  
-    // let sql = 'CALL CreatetUserAndAccount("Aaron", "ALAYO", "aaro0186@stud.edu.dk", "male", "65325675", "Odense", "usd", 1000, 1234, 2021-11-08)';
-        let sql = `CALL CreatetUserAndAccount(
+          let sql = `CALL CreatetUserAndAccount(
             "${parameters.firstName}", 
             "${parameters.lastName}", 
             "${parameters.userEmail}", 
@@ -160,13 +158,13 @@ app.post('/createuser', adminLoggedIn, async (req, res )=>{
             ${parameters.pinCode},
             ${parameters.expDate}
             )`;
-            console.log(typeof sql)
+            
     con.query(sql, true, (error, results, fields) => {
         if (error) {
-             console.error(error.message, fields);
+             console.error(error.message);
              return res.status(301).send(error.message);
         }
-        console.log(results[0], fields);
+        console.log(results[0]);
         res.status(200).send("User created succesfully");
     });
     
