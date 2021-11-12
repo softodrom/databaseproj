@@ -10,21 +10,6 @@ var mysql = require('mysql');
 var session = require('express-session');
 
 const bcrypt = require('bcrypt');
-const saltRounds = 10;
-const myPlaintextPassword = 's0/\/\P4$$w0rD';
-const someOtherPlaintextPassword = 'not_baco';
-
-
-bcrypt.hash(myPlaintextPassword, saltRounds, function(err, hash) {
-    console.log(myPlaintextPassword)
-
-    console.log(hash)
-
-    bcrypt.compare("zcbre345", "$2a$10$fOigPbT1tEzy1D0jYr838.GMAqDlvySciK7QfQ/o00jtlNbC1GXg6", function(err, result) {
-        console.log(result)
-    });
-
-});
 
 
 
