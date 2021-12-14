@@ -12,7 +12,6 @@ var session = require('express-session');
 const bcrypt = require('bcrypt');
 
 
-
 var con = mysql.createConnection({
     host: "n2o93bb1bwmn0zle.chr7pe7iynqr.eu-west-1.rds.amazonaws.com",
     user: "uvrz3xh8nxqf3dgg",
@@ -20,25 +19,10 @@ var con = mysql.createConnection({
     database: "xs80pat7dq8s0wj1"
 });
 
-// con.connect(function(err) {
-//     if (err) throw err;
-//     console.log("Connected!");
-// });
-
-// let sql = 'CALL CreatetUserAndAccount("Aaron", "ALAYO", "aaro0186@stud.edu.dk", "male", "65325675", "Odense", "usd", 1000, 1234, 2021-11-08)';
-
-// con.connect(function(err) {
-//     if (err) throw err;
-//     console.log("Connected!");
-//     con.query(sql, function (err, result) {
-//         if (err) throw err;
-//         console.log("Result: " + result);
-//     });
-// });
 
 
-var passport = require('passport')
-    , LocalStrategy = require('passport-local').Strategy;
+
+var passport = require('passport') , LocalStrategy = require('passport-local').Strategy;
 
 app.use(express.static("public"));
 app.use(session({
@@ -101,9 +85,7 @@ function adminLoggedIn(req, res, next) {
 
 
 //used to log in by posting query parameters username and password
-app.post('/login',
-    passport.authenticate('local', { failureRedirect: '/login'
-    }),
+app.post('/login',passport.authenticate('local', { failureRedirect: '/login' }),
     function(req, res) {
         res.send('You are logged in');
         console.log(req.user.login)
@@ -113,9 +95,12 @@ app.post('/login',
 
 // response is only sent to admins that are logged in
 app.get('/', adminLoggedIn, function (req, res) {
+
     res.send("you are logged in");
  
 });
+
+//Mysql
 app.get('/users', adminLoggedIn, async (req, res )=>{
     let sql = "select * from users_v_account_cards;";
       
@@ -149,7 +134,7 @@ app.post('/createuser', adminLoggedIn, async (req, res )=>{
              console.error(error.message);
              return res.status(301).send(error.message);
         }
-        console.log(results[0]);
+        // console.log(results[0]);
         res.status(200).send("User created succesfully");
     });
     
@@ -208,6 +193,84 @@ con.query(sql, true, (error, results, fields) => {
     res.status(200).send(results);
 });
 
+})
+
+
+//Neo4j
+const {getUsers, getOneUser, updateUser, createUser, deleteUser} = require('./neo4j/neo4j');
+const User = require('./models/User');
+
+app.get("/neousers", async (req, res) => {
+   
+try {
+    getUsers().then((users) => {
+        return res.json(users).end();
+    });
+    
+
+} catch (error) {
+    console.log(error)
+}
+});
+app.put('/neoupdateuser', adminLoggedIn, (req, res)=> {
+    const parameters =  req.body;
+    // console.log(parameters)
+        // parameters.userId
+        // parameters.firstName, 
+        // parameters.lastName, 
+        // parameters.userEmail, 
+        // parameters.userGender, 
+        // parameters.userPhone
+        // let updatedProperties = { propertyName: values };
+    //     if (firstName || firstName === "" || firstName === "undefined") {
+
+    //     }
+	// else if (!lastName || lastName === "" || lastName === "undefined"){
+
+    // } 
+		
+	// else if (!userEmail || userEmail === "" || userEmail === "undefined") {
+
+    // }
+	
+	// else if (!userGender || userGender === "" || userGender === "undefined") {
+
+    // }
+
+	// else if (!userPhone || userPhone === "" || userPhone === "undefined") {
+
+    // }
+    try {
+        updateUser(parameters).then((result) =>{
+            return res.json(result).end();
+      
+        });
+        
+    } catch (error) {
+        console.log(error)
+    }
+
+})
+app.post("/createneouser", async (req, res)=>{
+    const parameters = req.body;
+    try {
+        const newUser = await createUser(parameters);
+        res.send("New user created: " + JSON.stringify(newUser));
+    } catch (error) {
+        console.log(error);
+    }
+    
+})
+
+app.get("/deleteneouser", async (req, res) => {
+    const id = req.body.id
+    console.log(id)
+    try {
+        await deleteUser(id);
+        res.send("User deleted")
+    } catch (error) {
+        console.log(error)
+    }
 })
 
 app.listen(process.env.PORT || 4000, function () {
