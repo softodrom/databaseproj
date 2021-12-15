@@ -41,14 +41,12 @@ passport.serializeUser(function(user, done) {
     console.log(user)
     done(null, user.user_id);
 });
-
 // used to deserialize the user
 passport.deserializeUser(function(id, done) {
     con.query("select * from online_banking where user_id = "+id,function(err,rows){
         done(err, rows[0]);
     });
 });
-
 passport.use(new LocalStrategy(
     function(username, password, done) {
         console.log(username, password)
@@ -114,6 +112,7 @@ con.query(sql, true, (error, results, fields) => {
 });
 
 })
+
 app.post('/createuser', adminLoggedIn, async (req, res )=>{
     const parameters =  req.body;
           let sql = `CALL CreatetUserAndAccount(
@@ -180,7 +179,6 @@ app.delete('/deleteuser', adminLoggedIn, async (req, res )=>{
     
 })
 
-
 app.get('/bankemployees', adminLoggedIn, async (req, res )=>{
     let sql = "select * from bank_v_employee;";
       
@@ -212,6 +210,7 @@ try {
     console.log(error)
 }
 });
+
 app.put('/neoupdateuser', adminLoggedIn, (req, res)=> {
     const parameters =  req.body;
     // console.log(parameters)
@@ -251,6 +250,7 @@ app.put('/neoupdateuser', adminLoggedIn, (req, res)=> {
     }
 
 })
+
 app.post("/createneouser", async (req, res)=>{
     const parameters = req.body;
     try {
@@ -272,6 +272,73 @@ app.get("/deleteneouser", async (req, res) => {
         console.log(error)
     }
 })
+
+//MongoDB
+const mongoose = require('mongoose');
+
+const bank = require('./mongodb/models/bank')
+const user = require('./mongodb/models/user')
+const account = require('./mongodb/models/account')
+const card = require('./mongodb/models/card')
+const currency = require('./mongodb/models/currency')
+const employee = require('./mongodb/models/employee')
+mongoose.connect('mongodb+srv://testuser:testpassword@cluster0.ypzhz.mongodb.net/MandatoryBank?retryWrites=true&w=majority');
+
+app.get('/mongousers', async (req, res)=> {
+    let userModel = await user.model.find();
+    res.send(userModel)
+})
+
+app.post('/mongocreateuser',async (req, res )=> {
+    const parameters = req.body
+
+    // find currency
+    let currencyModel = await currency.model.find({name:parameters.userCurrency})
+    // find Bank branch
+    let bankModel = await bank.model.find({address:parameters.bankAddress})
+
+    // create models
+    const cardModel = new card.model({pinCode: parameters.pinCode, expDate: parameters.expDate})
+    const accountModel = new account.model({amount: parameters.userAmount, currency: currencyModel[0]})
+    accountModel.cards.push(cardModel)
+    const userModel = new user.model({firstName: parameters.firstName, lastName: parameters.lastName
+        ,email: parameters.userEmail, sex: parameters.userGender, phone:parameters.userPhone, bank: bankModel[0]})
+    userModel.accounts.push(accountModel)
+
+    // save to database
+    await  userModel.save() .then((user) => {
+        // If everything goes as planed
+        res.send("User created succesfully in mongoDB")
+    }).catch((error) => {
+        //When there are errors We handle them here
+        console.log(error);
+        res.send(301, error);
+    });
+})
+
+app.delete('/mongodeleteuser', async (req, res )=> {
+    let parameters = req.body
+
+    //delete a user and it's cards and accounts
+    user.model.findOneAndDelete({_id: parameters.id}, function (err, docs) {
+        if (err){
+            res.send(err)
+        }
+        else{
+            res.send("Deleted User : " + docs);
+        }
+    })
+})
+
+app.put('/mongoupdateuser', async (req, res)=> {
+    let parameters = req.body
+    let userDocument = await user.model.findOneAndUpdate({id: parameters.id}, parameters, {
+        new: true
+    });
+    res.send( await userDocument)
+})
+
+
 
 app.listen(process.env.PORT || 4000, function () {
     console.log('Node app is working!');
