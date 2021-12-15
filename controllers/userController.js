@@ -25,33 +25,8 @@ let getAllUsers = async function () {
   } catch (error) {
     await session.close();
   }
-  
-
 };
-let updateUser = async function (parameters) {
-  // console.log(parameters)
-  let updatedProperties = {
-    first_name: parameters.properties.first_name,
-    last_name: parameters.properties.last_name,
-    email: parameters.properties.email,
-    gender: parameters.properties.gender,
-    phone: parameters.properties.phone
-  };
 
-    let statementText = `
-    MATCH (user:User) WHERE ID(user) = ${parameters.id} SET 
-    user.first_name="${updatedProperties.first_name}", 
-    user.last_name="${updatedProperties.last_name}", 
-    user.email="${updatedProperties.email}", 
-    user.phone="${updatedProperties.phone}", 
-    user.gender="${updatedProperties.gender}" 
-    RETURN user`;
-    // let statementParameters = _user(updatedProperties)
-    let result = await session.run(statementText)
-    console.log(_user(result))
-    return _user(result);
- 
-};
 let getUser = async function (userId) {
   try {
     const result = await session.run(`MATCH (user:User) WHERE ID(user) = ${userId} RETURN user`);
@@ -59,7 +34,6 @@ let getUser = async function (userId) {
   } catch (error) {
     await session.close()
   }
-
 }
 
 async function getOneUser(userId) {
@@ -72,14 +46,11 @@ async function getOneUser(userId) {
       node[0].properties.email,
       node[0].properties.phone,
       node[0].properties.gender);
-
-
   });
   return user;
 }
 async function showNewUser(node) {
   let user;
-  
     user = new User(
       node[0].identity.low,
       node[0].properties.first_name,
@@ -87,9 +58,6 @@ async function showNewUser(node) {
       node[0].properties.email,
       node[0].properties.phone,
       node[0].properties.gender);
-
-
-
   return user;
 }
 async function getUsers() {
@@ -126,9 +94,30 @@ let createUser = async function (parameters) {
       console.log(error);
       await session.close();
     }
-    
 }
+let updateUser = async function (parameters) {
+  // console.log(parameters)
+  let updatedProperties = {
+    first_name: parameters.properties.first_name,
+    last_name: parameters.properties.last_name,
+    email: parameters.properties.email,
+    gender: parameters.properties.gender,
+    phone: parameters.properties.phone
+  };
 
+    let statementText = `
+    MATCH (user:User) WHERE ID(user) = ${parameters.id} SET 
+    user.first_name="${updatedProperties.first_name}", 
+    user.last_name="${updatedProperties.last_name}", 
+    user.email="${updatedProperties.email}", 
+    user.phone="${updatedProperties.phone}", 
+    user.gender="${updatedProperties.gender}" 
+    RETURN user`;
+    // let statementParameters = _user(updatedProperties)
+    let result = await session.run(statementText)
+    console.log(_user(result))
+    return _user(result);
+};
 let deleteUser = async function(id){
   let statement = `MATCH (u:User ) WHERE id(u)=${id}
   DELETE u`

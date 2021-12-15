@@ -137,7 +137,6 @@ app.post('/createuser', adminLoggedIn, async (req, res )=>{
         // console.log(results[0]);
         res.status(200).send("User created succesfully");
     });
-    
 })
 
 app.put('/updateuser', adminLoggedIn, (req, res)=> {
@@ -164,11 +163,9 @@ con.query(sql, true, (error, results, fields) => {
 
 app.delete('/deleteuser', adminLoggedIn, async (req, res )=>{
     const userId =  req.body.userId;
-  
         let sql = `CALL DeleteUserAndAccount(
             ${userId} 
             )`;
-
     con.query(sql, true, (error, results, fields) => {
         if (error) {
              console.error(error.message, fields);
@@ -177,8 +174,7 @@ app.delete('/deleteuser', adminLoggedIn, async (req, res )=>{
         console.log(results[0], fields);
         res.status(200).send("User was deleted");
     });
-    
-})
+});
 
 
 app.get('/bankemployees', adminLoggedIn, async (req, res )=>{
@@ -197,60 +193,29 @@ con.query(sql, true, (error, results, fields) => {
 
 
 //Neo4j
-const {getUsers, getOneUser, updateUser, createUser, deleteUser} = require('./neo4j/neo4j');
+const {getUsers, getOneUser, updateUser, createUser, deleteUser} = require('./controllers/userController');
 const User = require('./models/User');
 
 app.get("/neousers", async (req, res) => {
-   
 try {
     getUsers().then((users) => {
         return res.json(users).end();
     });
-    
-
 } catch (error) {
     console.log(error)
 }
 });
+
 app.put('/neoupdateuser', adminLoggedIn, (req, res)=> {
     const parameters =  req.body;
-    // console.log(parameters)
-        // parameters.userId
-        // parameters.firstName, 
-        // parameters.lastName, 
-        // parameters.userEmail, 
-        // parameters.userGender, 
-        // parameters.userPhone
-        // let updatedProperties = { propertyName: values };
-    //     if (firstName || firstName === "" || firstName === "undefined") {
-
-    //     }
-	// else if (!lastName || lastName === "" || lastName === "undefined"){
-
-    // } 
-		
-	// else if (!userEmail || userEmail === "" || userEmail === "undefined") {
-
-    // }
-	
-	// else if (!userGender || userGender === "" || userGender === "undefined") {
-
-    // }
-
-	// else if (!userPhone || userPhone === "" || userPhone === "undefined") {
-
-    // }
     try {
         updateUser(parameters).then((result) =>{
             return res.json(result).end();
-      
-        });
-        
+        });    
     } catch (error) {
         console.log(error)
     }
-
-})
+});
 app.post("/createneouser", async (req, res)=>{
     const parameters = req.body;
     try {
@@ -259,7 +224,6 @@ app.post("/createneouser", async (req, res)=>{
     } catch (error) {
         console.log(error);
     }
-    
 })
 
 app.get("/deleteneouser", async (req, res) => {
