@@ -1,6 +1,9 @@
+
 const mongoose = require('mongoose');
 const account = require('./account')
 const bank = require('./bank')
+const loan = require('./loan')
+
 
 const userSchema = new mongoose.Schema({
     firstName: {type: String, required: true},
@@ -9,7 +12,8 @@ const userSchema = new mongoose.Schema({
     sex: {type: String, required: true},
     phone: {type: String, required: true},
     accounts: {type: [account.schema], required: true},
-    bank: {type: bank.schema, required: true},
+    bank: {type: mongoose.Schema.Types.ObjectId, ref: "bank", required: true},
+    loan: [loan.schema]
 
 });
 

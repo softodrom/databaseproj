@@ -246,8 +246,10 @@ const currency = require('./mongodb/models/currency')
 const employee = require('./mongodb/models/employee')
 mongoose.connect('mongodb+srv://testuser:testpassword@cluster0.ypzhz.mongodb.net/MandatoryBank?retryWrites=true&w=majority');
 
-app.get('/mongousers', adminLoggedIn, async (req, res)=> {
-    let userModel = await user.model.find();
+app.get('/mongousers', async (req, res)=> {
+    //.populate("bank") automatically adds the data of the bank associated with the bank id in the users document
+    // similar to a join
+    let userModel = await user.model.find().populate("bank");
     res.send(userModel)
 })
 
