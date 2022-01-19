@@ -100,14 +100,14 @@ app.get('/', adminLoggedIn, function (req, res) {
 
 //Mysql
 app.get('/users', adminLoggedIn, async (req, res )=>{
-    let sql = "select * from users_v_account_cards;";
+    let sql = "select * from users_v_bank;";
       
 con.query(sql, true, (error, results, fields) => {
     if (error) {
          console.error(error.message, fields);
          return res.status(301).send(error.message);
     }
-    console.log(results[0]);
+    // console.log(results[0]);
     res.status(200).send(results);
 });
 
@@ -155,8 +155,8 @@ con.query(sql, true, (error, results, fields) => {
          console.error(error.message, fields);
          return res.status(301).send(error.message);
     }
-    console.log(results[0], fields);
-    res.status(200).send("User was updated");
+  
+    res.status(200).send("User was updated ");
 });
 })
 
@@ -214,7 +214,7 @@ app.put('/neoupdateuser', adminLoggedIn, (req, res)=> {
         console.log(error)
     }
 });
-app.post("/createneouser", async (req, res)=>{
+app.post("/createneouser", adminLoggedIn, async (req, res)=>{
     const parameters = req.body;
     try {
         const newUser = await createUser(parameters);
@@ -224,7 +224,7 @@ app.post("/createneouser", async (req, res)=>{
     }
 })
 
-app.get("/deleteneouser", async (req, res) => {
+app.get("/deleteneouser", adminLoggedIn, async (req, res) => {
     const id = req.body.id
     console.log(id)
     try {
@@ -246,31 +246,30 @@ const currency = require('./mongodb/models/currency')
 const employee = require('./mongodb/models/employee')
 mongoose.connect('mongodb+srv://testuser:testpassword@cluster0.ypzhz.mongodb.net/MandatoryBank?retryWrites=true&w=majority');
 
-app.get('/mongousers', async (req, res)=> {
+app.get('/mongousers', adminLoggedIn, async (req, res)=> {
     let userModel = await user.model.find();
     res.send(userModel)
 })
 
-app.post('/mongocreateuser',async (req, res )=> {
+app.post('/mongocreateuser', adminLoggedIn, async (req, res )=> {
     const parameters = req.body
-
     // find currency
     let currencyModel = await currency.model.find({name:parameters.userCurrency})
     // find Bank branch
     let bankModel = await bank.model.find({address:parameters.bankAddress})
 
     // create models
-    const cardModel = new card.model({pinCode: parameters.pinCode, expDate: parameters.expDate})
-    const accountModel = new account.model({amount: parameters.userAmount, currency: currencyModel[0]})
-    accountModel.cards.push(cardModel)
+    const cardModel = new card.model({pinCode: parameters.pinCode, expDate: new Date(parameters.expDate)});
+    const accountModel = new account.model({amount: parameters.userAmount, currency: currencyModel[0]});
+    accountModel.cards.push(cardModel);
     const userModel = new user.model({firstName: parameters.firstName, lastName: parameters.lastName
         ,email: parameters.userEmail, sex: parameters.userGender, phone:parameters.userPhone, bank: bankModel[0]})
-    userModel.accounts.push(accountModel)
+    userModel.accounts.push(accountModel);
 
     // save to database
-    await  userModel.save() .then((user) => {
+    await  userModel.save().then((user) => {
         // If everything goes as planed
-        res.send("User created succesfully in mongoDB")
+        res.status(200).send("User created succesfully in mongoDB: "+ JSON.stringify(user))
     }).catch((error) => {
         //When there are errors We handle them here
         console.log(error);
@@ -278,7 +277,7 @@ app.post('/mongocreateuser',async (req, res )=> {
     });
 })
 
-app.delete('/mongodeleteuser', async (req, res )=> {
+app.delete('/mongodeleteuser', adminLoggedIn, async (req, res )=> {
     let parameters = req.body
 
     //delete a user and it's cards and accounts
@@ -292,12 +291,14 @@ app.delete('/mongodeleteuser', async (req, res )=> {
     })
 })
 
-app.put('/mongoupdateuser', async (req, res)=> {
+app.put('/mongoupdateuser', adminLoggedIn, async (req, res)=> {
     let parameters = req.body
-    let userDocument = await user.model.findOneAndUpdate({id: parameters.id}, parameters, {
+    let userDocument = await user.model.findOneAndUpdate({_id: parameters.id}, parameters, {
         new: true
+    }).then((user)=>{
+        res.send(user)
     });
-    res.send( await userDocument)
+    
 })
 
 
