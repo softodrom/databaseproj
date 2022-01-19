@@ -194,7 +194,7 @@ con.query(sql, true, (error, results, fields) => {
 const {getUsers, getOneUser, updateUser, createUser, deleteUser} = require('./controllers/userController');
 const User = require('./models/User');
 
-app.get("/neousers", async (req, res) => {
+app.get("/neousers", adminLoggedIn, async (req, res) => {
 try {
     getUsers().then((users) => {
         return res.json(users).end();
